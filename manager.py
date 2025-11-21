@@ -549,11 +549,120 @@ class Gui:
             self.update_statusbar("no file to save")
             print("no file to save")
 
-    def load_save(self):
-        filename = filedialog.askopenfilename(initialdir=self.saves_db_path, title="Select File",
-                                              filetypes=(("Save-Files", "*.sav"), ("all files", "*.*")))
+    def show_file_dialog(self, directory, title, extension):
+        """Custom file dialog that shows directories then files, sorted by modified date (newest first)."""
+        dialog = tk.Toplevel(self.root)
+        dialog.title(title)
+        dialog.geometry("600x400")
+        dialog.transient(self.root)
+        dialog.grab_set()
 
-        if len(filename) == 0:
+        selected_file = [None]  # Use list to allow modification in nested function
+        current_dir = [directory]  # Track current directory
+
+        # Create frame for listbox and scrollbar
+        frame = tk.Frame(dialog)
+        frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Path label
+        path_label = tk.Label(frame, text=directory, anchor="w")
+        path_label.pack(fill="x", pady=(0, 5))
+
+        # Create listbox with scrollbar
+        list_frame = tk.Frame(frame)
+        list_frame.pack(fill="both", expand=True)
+
+        scrollbar = tk.Scrollbar(list_frame)
+        scrollbar.pack(side="right", fill="y")
+
+        listbox = tk.Listbox(list_frame, yscrollcommand=scrollbar.set, font=("Consolas", 10))
+        listbox.pack(side="left", fill="both", expand=True)
+        scrollbar.config(command=listbox.yview)
+
+        items = []  # Store (name, full_path, is_dir, mtime)
+
+        def populate_list(dir_path):
+            nonlocal items
+            listbox.delete(0, "end")
+            items = []
+            path_label.config(text=dir_path)
+            current_dir[0] = dir_path
+
+            if not os.path.exists(dir_path):
+                return
+
+            # Add parent directory option if not at root
+            if dir_path != directory:
+                items.append(("..", os.path.dirname(dir_path), True, 0))
+                listbox.insert("end", "[..]")
+
+            # Get directories and files
+            dirs = []
+            files = []
+            for f in os.listdir(dir_path):
+                full_path = os.path.join(dir_path, f)
+                mtime = os.path.getmtime(full_path)
+                if os.path.isdir(full_path):
+                    dirs.append((f, full_path, True, mtime))
+                elif f.lower().endswith(extension.lower()):
+                    files.append((f, full_path, False, mtime))
+
+            # Sort by modified date (newest first)
+            dirs.sort(key=lambda x: x[3], reverse=True)
+            files.sort(key=lambda x: x[3], reverse=True)
+
+            # Add directories first, then files
+            for name, full_path, is_dir, mtime in dirs:
+                items.append((name, full_path, is_dir, mtime))
+                date_str = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+                listbox.insert("end", f"{date_str}  |  [DIR] {name}")
+
+            for name, full_path, is_dir, mtime in files:
+                items.append((name, full_path, is_dir, mtime))
+                date_str = datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+                listbox.insert("end", f"{date_str}  |  {name}")
+
+        def on_select():
+            selection = listbox.curselection()
+            if selection:
+                idx = selection[0]
+                name, full_path, is_dir, mtime = items[idx]
+                if is_dir:
+                    populate_list(full_path)
+                else:
+                    selected_file[0] = full_path
+                    dialog.destroy()
+
+        def on_double_click(event):
+            on_select()
+
+        def on_cancel():
+            dialog.destroy()
+
+        listbox.bind("<Double-Button-1>", on_double_click)
+
+        # Buttons
+        button_frame = tk.Frame(dialog)
+        button_frame.pack(fill="x", padx=10, pady=10)
+
+        select_btn = tk.Button(button_frame, text="Select", command=on_select, width=10)
+        select_btn.pack(side="right", padx=5)
+
+        cancel_btn = tk.Button(button_frame, text="Cancel", command=on_cancel, width=10)
+        cancel_btn.pack(side="right", padx=5)
+
+        # Initial population
+        populate_list(directory)
+
+        # Wait for dialog to close
+        dialog.wait_window()
+
+        return selected_file[0]
+
+    def load_save(self):
+        filename = self.show_file_dialog(self.saves_db_path, "Select File", ".sav")
+
+        if filename is None or len(filename) == 0:
             self.update_statusbar("no file selected")
             print("no file selected")
         else:
