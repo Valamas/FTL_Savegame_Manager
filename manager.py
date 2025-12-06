@@ -411,6 +411,7 @@ class Gui:
                     "(Faster Than Light) save files.\n\n"
                     "Features:\n"
                     "• Automatic save file tracking and backup\n"
+                    "• Load dialog with newest files first\n"
                     "• Run statistics and inventory tracking\n"
                     "• Support for both Vanilla and Multiverse")
         desc_label = tk.Label(content_frame, text=desc_text, justify="left")
