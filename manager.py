@@ -400,7 +400,11 @@ class Gui:
 
         # Title
         title_label = tk.Label(content_frame, text="FTL Savegame Manager", font=("Arial", 14, "bold"))
-        title_label.pack(pady=(0, 10))
+        title_label.pack(pady=(0, 5))
+
+        # Version
+        version_label = tk.Label(content_frame, text="v5.0.1-fork", font=("Arial", 9), fg="gray")
+        version_label.pack(pady=(0, 10))
 
         # Description
         desc_text = ("A tool for managing and tracking FTL\n"
