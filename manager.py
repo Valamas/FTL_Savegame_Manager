@@ -394,8 +394,32 @@ class Gui:
         about_dialog.transient(self.root)
         about_dialog.grab_set()
 
+        # Main container with scrollbar
+        main_container = tk.Frame(about_dialog)
+        main_container.pack(fill="both", expand=True, padx=10, pady=10)
+
+        # Canvas for scrolling
+        canvas = tk.Canvas(main_container)
+        scrollbar = tk.Scrollbar(main_container, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        # Enable mouse wheel scrolling
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        about_dialog.bind("<Destroy>", lambda e: canvas.unbind_all("<MouseWheel>"))
+
         # Content frame with padding
-        content_frame = tk.Frame(about_dialog, padx=20, pady=20)
+        content_frame = tk.Frame(scrollable_frame, padx=20, pady=20)
         content_frame.pack(fill="both", expand=True)
 
         # Title
@@ -411,7 +435,6 @@ class Gui:
                     "(Faster Than Light) save files.\n\n"
                     "Features:\n"
                     "• Automatic save file tracking and backup\n"
-                    "• Load dialog with newest files first\n"
                     "• Run statistics and inventory tracking\n"
                     "• Support for both Vanilla and Multiverse")
         desc_label = tk.Label(content_frame, text=desc_text, justify="left")
@@ -427,8 +450,19 @@ class Gui:
         original_link.pack()
         original_link.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/ejms116/FTL_Savegame_Manager"))
 
+        # Changes in fork
+        changes_label = tk.Label(content_frame, text="\nChanges in this fork:", font=("Arial", 9, "bold"))
+        changes_label.pack(pady=(10, 5))
+
+        changes_text = ("• Auto-save tracking enabled by default\n"
+                       "• Centered dialog windows\n"
+                       "• Load dialog with newest files first\n"
+                       "• Functional About dialog with clickable links")
+        changes_desc = tk.Label(content_frame, text=changes_text, justify="left", font=("Arial", 9))
+        changes_desc.pack()
+
         # Fork label
-        fork_label = tk.Label(content_frame, text="Fork:", font=("Arial", 9))
+        fork_label = tk.Label(content_frame, text="\nFork:", font=("Arial", 9))
         fork_label.pack(pady=(10, 0))
 
         # Fork repo link
@@ -437,9 +471,15 @@ class Gui:
         fork_link.pack()
         fork_link.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/Valamas/FTL_Savegame_Manager"))
 
-        # OK button
-        ok_button = tk.Button(content_frame, text="OK", command=about_dialog.destroy, width=10)
-        ok_button.pack(pady=(20, 0))
+        # Pack canvas and scrollbar
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+
+        # OK button (outside scrollable area)
+        button_frame = tk.Frame(about_dialog)
+        button_frame.pack(fill="x", padx=10, pady=(0, 10))
+        ok_button = tk.Button(button_frame, text="OK", command=about_dialog.destroy, width=10)
+        ok_button.pack()
 
     def open_saves_folder(self):
         os.startfile(self.saves_db_path)
