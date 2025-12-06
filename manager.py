@@ -37,7 +37,7 @@ class Gui:
         if self.update_frequency is None:
             self.update_frequency = 2000
 
-        self.tracking = False
+        self.tracking = True
 
         self.filename_suffix = ".sav"
         self.savegame = sg.Savegame(self.target_path, self.target_path_mv)
