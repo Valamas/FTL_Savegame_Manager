@@ -12,6 +12,7 @@ from source import run as r
 import copy
 import numpy as np
 from pprint import pprint
+import webbrowser
 
 
 # compile with pyinstaller.exe --onefile --windowed  ftl_savegame_manager.py
@@ -374,7 +375,66 @@ class Gui:
 
 
     def show_help(self):
-        pass
+        about_dialog = tk.Toplevel(self.root)
+        about_dialog.title("About FTL Savegame Manager")
+        about_dialog.resizable(False, False)
+
+        # Center dialog relative to main window
+        parent_x = self.root.winfo_x()
+        parent_y = self.root.winfo_y()
+        parent_width = self.root.winfo_width()
+        parent_height = self.root.winfo_height()
+
+        dialog_width = 450
+        dialog_height = 320
+        x = parent_x + (parent_width - dialog_width) // 2
+        y = parent_y + (parent_height - dialog_height) // 2
+
+        about_dialog.geometry(f"{dialog_width}x{dialog_height}+{x}+{y}")
+        about_dialog.transient(self.root)
+        about_dialog.grab_set()
+
+        # Content frame with padding
+        content_frame = tk.Frame(about_dialog, padx=20, pady=20)
+        content_frame.pack(fill="both", expand=True)
+
+        # Title
+        title_label = tk.Label(content_frame, text="FTL Savegame Manager", font=("Arial", 14, "bold"))
+        title_label.pack(pady=(0, 10))
+
+        # Description
+        desc_text = ("A tool for managing and tracking FTL\n"
+                    "(Faster Than Light) save files.\n\n"
+                    "Features:\n"
+                    "• Automatic save file tracking and backup\n"
+                    "• Run statistics and inventory tracking\n"
+                    "• Support for both Vanilla and Multiverse")
+        desc_label = tk.Label(content_frame, text=desc_text, justify="left")
+        desc_label.pack(pady=(0, 15))
+
+        # Original Author
+        author_label = tk.Label(content_frame, text="Original Author: ejms116", font=("Arial", 9))
+        author_label.pack()
+
+        # Original repo link
+        original_link = tk.Label(content_frame, text="https://github.com/ejms116/FTL_Savegame_Manager",
+                                fg="blue", cursor="hand2", font=("Arial", 9, "underline"))
+        original_link.pack()
+        original_link.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/ejms116/FTL_Savegame_Manager"))
+
+        # Fork label
+        fork_label = tk.Label(content_frame, text="Fork:", font=("Arial", 9))
+        fork_label.pack(pady=(10, 0))
+
+        # Fork repo link
+        fork_link = tk.Label(content_frame, text="https://github.com/Valamas/FTL_Savegame_Manager",
+                            fg="blue", cursor="hand2", font=("Arial", 9, "underline"))
+        fork_link.pack()
+        fork_link.bind("<Button-1>", lambda e: webbrowser.open("https://github.com/Valamas/FTL_Savegame_Manager"))
+
+        # OK button
+        ok_button = tk.Button(content_frame, text="OK", command=about_dialog.destroy, width=10)
+        ok_button.pack(pady=(20, 0))
 
     def open_saves_folder(self):
         os.startfile(self.saves_db_path)
@@ -553,7 +613,17 @@ class Gui:
         """Custom file dialog that shows directories then files, sorted by modified date (newest first)."""
         dialog = tk.Toplevel(self.root)
         dialog.title(title)
-        dialog.geometry("600x400")
+
+        # Center dialog relative to main window
+        parent_x = self.root.winfo_x()
+        parent_y = self.root.winfo_y()
+        parent_width = self.root.winfo_width()
+        parent_height = self.root.winfo_height()
+
+        x = parent_x + (parent_width - 600) // 2
+        y = parent_y + (parent_height - 400) // 2
+
+        dialog.geometry(f"600x400+{x}+{y}")
         dialog.transient(self.root)
         dialog.grab_set()
 
